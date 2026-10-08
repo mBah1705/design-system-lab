@@ -29,6 +29,12 @@
     },
     {
       "path": "./projects/ds-core/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/showcase/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/showcase/tsconfig.spec.json"
     }
   ]
 }
