@@ -25,16 +25,16 @@
   "files": [],
   "references": [
     {
-      "path": "./projects/ds-core/tsconfig.lib.json"
+      "path": "./projects/ds-core-lib/tsconfig.lib.json"
     },
     {
-      "path": "./projects/ds-core/tsconfig.spec.json"
+      "path": "./projects/ds-core-lib/tsconfig.spec.json"
     },
     {
-      "path": "./projects/showcase/tsconfig.app.json"
+      "path": "./projects/showcase-app/tsconfig.app.json"
     },
     {
-      "path": "./projects/showcase/tsconfig.spec.json"
+      "path": "./projects/showcase-app/tsconfig.spec.json"
     }
   ]
 }

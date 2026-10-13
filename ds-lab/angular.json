@@ -9,18 +9,18 @@
   "projects": {
     "ds-core": {
       "projectType": "library",
-      "root": "projects/ds-core",
-      "sourceRoot": "projects/ds-core/src",
+      "root": "projects/ds-core-lib",
+      "sourceRoot": "projects/ds-core-lib/src",
       "prefix": "lib",
       "architect": {
         "build": {
           "builder": "@angular/build:ng-packagr",
           "configurations": {
             "production": {
-              "tsConfig": "projects/ds-core/tsconfig.lib.prod.json"
+              "tsConfig": "projects/ds-core-lib/tsconfig.lib.prod.json"
             },
             "development": {
-              "tsConfig": "projects/ds-core/tsconfig.lib.json"
+              "tsConfig": "projects/ds-core-lib/tsconfig.lib.json"
             }
           },
           "defaultConfiguration": "production"
@@ -28,7 +28,7 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "tsConfig": "projects/ds-core/tsconfig.spec.json"
+            "tsConfig": "projects/ds-core-lib/tsconfig.spec.json"
           }
         }
       }
@@ -40,23 +40,23 @@
           "style": "scss"
         }
       },
-      "root": "projects/showcase",
-      "sourceRoot": "projects/showcase/src",
+      "root": "projects/showcase-app",
+      "sourceRoot": "projects/showcase-app/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "projects/showcase/src/main.ts",
-            "tsConfig": "projects/showcase/tsconfig.app.json",
+            "browser": "projects/showcase-app/src/main.ts",
+            "tsConfig": "projects/showcase-app/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "projects/showcase/public"
+                "input": "projects/showcase-app/public"
               }
             ],
-            "styles": ["projects/showcase/src/styles.scss"]
+            "styles": ["projects/showcase-app/src/styles.scss"]
           },
           "configurations": {
             "production": {
