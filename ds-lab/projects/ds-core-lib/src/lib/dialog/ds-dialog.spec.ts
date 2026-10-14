@@ -2,6 +2,9 @@ import { Component, provideZonelessChangeDetection, signal } from '@angular/core
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DsDialog } from './ds-dialog';
 import { expectNoA11yViolations } from '../../test-utils/a11y';
+import { installDialogPolyfill } from '../../test-utils/dialog-polyfill';
+
+installDialogPolyfill();
 
 @Component({
   imports: [DsDialog],
@@ -89,7 +92,7 @@ describe('DsDialog', () => {
   it('should have aria-labelledby pointing to an existing element', async () => {
     await openDialog();
 
-    const dialogEl = fixture.nativeElement.querySelector('[role="dialog"]');
+    const dialogEl = fixture.nativeElement.querySelector('dialog');
     expect(dialogEl).not.toBeNull();
 
     const labelledBy = dialogEl?.getAttribute('aria-labelledby');

@@ -1,20 +1,17 @@
 import {
   Component,
-  ElementRef,
   afterRenderEffect,
-  inject,
   input,
   model,
+  viewChild,
 } from '@angular/core';
 
 @Component({
   selector: 'ds-dialog',
   template: `
-    @if (open()) {
-      <div role="dialog" aria-modal="true">
-        <ng-content />
-      </div>
-    }
+    <dialog #dialogEl>
+      <ng-content />
+    </dialog>
   `,
   host: {
     '(keydown)': 'onKeydown($event)',
@@ -27,34 +24,36 @@ export class DsDialog {
   /** Reference to the element that triggered the dialog. */
   triggerRef = input.required<HTMLElement>();
 
-  private el = inject(ElementRef);
+  private dialogEl =
+    viewChild.required<{ nativeElement: HTMLDialogElement }>('dialogEl');
 
   constructor() {
     afterRenderEffect(() => {
+      const dialog = this.dialogEl().nativeElement;
+
       if (this.open()) {
-        this.initDialog();
+        dialog.showModal();
+
+        const labelEl = dialog.querySelector('[id]');
+        if (labelEl) {
+          dialog.setAttribute('aria-labelledby', labelEl.id);
+        }
+
+        const focusable = this.getFocusableElements();
+        if (focusable.length > 0) {
+          focusable[0].focus();
+        }
+      } else {
+        if (dialog.hasAttribute('open')) {
+          dialog.close();
+        }
       }
     });
   }
 
-  private initDialog(): void {
-    const dialogDiv = this.el.nativeElement.querySelector('[role="dialog"]');
-    if (!dialogDiv) return;
-
-    const labelEl = dialogDiv.querySelector('[id]');
-    if (labelEl) {
-      dialogDiv.setAttribute('aria-labelledby', labelEl.id);
-    }
-
-    const focusable = this.getFocusableElements();
-    if (focusable.length > 0) {
-      focusable[0].focus();
-    }
-  }
-
   private getFocusableElements(): HTMLElement[] {
     return Array.from(
-      this.el.nativeElement.querySelectorAll(
+      this.dialogEl().nativeElement.querySelectorAll(
         'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
       ),
     );
@@ -62,6 +61,7 @@ export class DsDialog {
 
   onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
+      event.preventDefault();
       this.open.set(false);
       this.triggerRef().focus();
       return;
