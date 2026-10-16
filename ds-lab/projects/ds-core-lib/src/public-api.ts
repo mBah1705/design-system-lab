@@ -3,4 +3,4 @@
  */
 
 export * from './lib/ds-core';
-export * from './lib/dialog/ds-dialog';
+export * from './lib/dialog/index';

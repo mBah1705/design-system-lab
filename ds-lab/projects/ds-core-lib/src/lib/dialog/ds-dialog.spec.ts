@@ -1,109 +1,190 @@
-import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DsDialog } from './ds-dialog';
-import { expectNoA11yViolations } from '../../test-utils/a11y';
-import { installDialogPolyfill } from '../../test-utils/dialog-polyfill';
-
-installDialogPolyfill();
+import {
+  ApplicationRef,
+  Component,
+  inject,
+  provideZonelessChangeDetection,
+} from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { firstValueFrom } from 'rxjs';
+import axe from 'axe-core';
+import { DsDialog } from './ds-dialog.service';
+import { DsDialogRef } from './ds-dialog-ref';
+import { DS_DIALOG_DATA } from './ds-dialog-tokens';
+import {
+  DsDialogTitle,
+  DsDialogContent,
+  DsDialogActions,
+  DsDialogClose,
+} from './ds-dialog-content-directives';
 
 @Component({
-  imports: [DsDialog],
+  imports: [DsDialogTitle, DsDialogContent, DsDialogActions, DsDialogClose],
   template: `
-    <button (click)="open.set(true)" #trigger>Open</button>
-    <ds-dialog [(open)]="open" [triggerRef]="trigger">
-      <h2 id="dialog-title">Title</h2>
-      <p id="dialog-desc">Description</p>
-      <input type="text" aria-label="Name" />
-      <button class="action-btn">OK</button>
-      <button class="close-btn" (click)="open.set(false)">Cancel</button>
-    </ds-dialog>
+    <h2 dsDialogTitle>Dialog Title</h2>
+    <div dsDialogContent>
+      <p>{{ data.message }}</p>
+    </div>
+    <div dsDialogActions>
+      <button dsDialogClose class="cancel-btn">Cancel</button>
+      <button [dsDialogClose]="true" class="ok-btn">OK</button>
+    </div>
   `,
 })
-class TestHost {
-  open = signal(false);
+class TestDialogComponent {
+  data = inject(DS_DIALOG_DATA) as { message: string };
 }
 
 describe('DsDialog', () => {
-  let fixture: ComponentFixture<TestHost>;
-  let host: TestHost;
-  let triggerBtn: HTMLButtonElement;
+  let dialog: DsDialog;
+  let appRef: ApplicationRef;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [TestHost],
+    TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection()],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(TestHost);
-    host = fixture.componentInstance;
-    await fixture.whenStable();
-
-    triggerBtn = fixture.nativeElement.querySelector('button');
+    });
+    dialog = TestBed.inject(DsDialog);
+    appRef = TestBed.inject(ApplicationRef);
   });
 
-  async function openDialog(): Promise<void> {
-    host.open.set(true);
-    await fixture.whenStable();
+  afterEach(() => {
+    dialog.closeAll();
+  });
+
+  function openAndTick(data: { message: string }) {
+    const ref = dialog.open(TestDialogComponent, { data });
+    // First tick renders the component content (including DsDialogTitle's ngOnInit
+    // which calls _addAriaLabelledBy). Second tick propagates the updated host binding.
+    appRef.tick();
+    appRef.tick();
+    return ref;
   }
 
-  it('should move focus inside dialog on open', async () => {
-    await openDialog();
+  it('should open a dialog and return a DsDialogRef', () => {
+    const ref = openAndTick({ message: 'hello' });
 
-    const dialogEl = fixture.nativeElement.querySelector('ds-dialog');
-    expect(dialogEl.contains(document.activeElement)).toBe(true);
+    expect(ref).toBeInstanceOf(DsDialogRef);
+    expect(ref.id).toBeTruthy();
   });
 
-  it('should trap Tab cycle inside dialog', async () => {
-    await openDialog();
+  it('should pass data via DS_DIALOG_DATA', () => {
+    const ref = openAndTick({ message: 'test data' });
 
-    const focusableEls: HTMLElement[] = Array.from(
-      fixture.nativeElement.querySelectorAll(
-        'ds-dialog input, ds-dialog button',
-      ),
-    );
-    expect(focusableEls.length).toBeGreaterThan(0);
-
-    // Focus the last focusable element
-    const lastEl = focusableEls[focusableEls.length - 1];
-    lastEl.focus();
-    expect(document.activeElement).toBe(lastEl);
-
-    // Press Tab — focus should cycle back to the first focusable element
-    lastEl.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }),
-    );
-    await fixture.whenStable();
-
-    expect(document.activeElement).toBe(focusableEls[0]);
+    expect(ref.componentInstance?.data).toEqual({ message: 'test data' });
   });
 
-  it('should close on Escape and restore focus to trigger', async () => {
-    await openDialog();
+  it('should close and emit result via closed', async () => {
+    const ref = openAndTick({ message: 'hello' });
 
-    document.activeElement?.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
-    );
-    await fixture.whenStable();
+    const resultPromise = firstValueFrom(ref.closed);
+    ref.close('my-result');
 
-    expect(host.open()).toBe(false);
-    expect(document.activeElement).toBe(triggerBtn);
+    const result = await resultPromise;
+    expect(result).toBe('my-result');
   });
 
-  it('should have aria-labelledby pointing to an existing element', async () => {
-    await openDialog();
+  it('should close all dialogs with closeAll()', () => {
+    dialog.open(TestDialogComponent, { data: { message: '1' } });
+    dialog.open(TestDialogComponent, { data: { message: '2' } });
 
-    const dialogEl = fixture.nativeElement.querySelector('dialog');
-    expect(dialogEl).not.toBeNull();
+    expect(dialog.openDialogs.length).toBe(2);
 
-    const labelledBy = dialogEl?.getAttribute('aria-labelledby');
+    dialog.closeAll();
+
+    expect(dialog.openDialogs.length).toBe(0);
+  });
+
+  it('DsDialogTitle should set aria-labelledby on the container', () => {
+    openAndTick({ message: 'hello' });
+
+    const container = document.querySelector('ds-dialog-container');
+    expect(container).not.toBeNull();
+
+    // Verify the h2 element has the generated ID
+    const titleEl = document.querySelector('[dsdialogtitle]');
+    expect(titleEl).not.toBeNull();
+    expect(titleEl?.id).toMatch(/^ds-dialog-title-\d+$/);
+
+    // The container should reference the title via aria-labelledby
+    const labelledBy = container?.getAttribute('aria-labelledby');
     expect(labelledBy).toBeTruthy();
+    expect(labelledBy).toBe(titleEl?.id);
+  });
 
-    const labelEl = fixture.nativeElement.querySelector(`#${labelledBy}`);
-    expect(labelEl).not.toBeNull();
+  it('DsDialogClose should close the dialog on click', async () => {
+    const ref = openAndTick({ message: 'hello' });
+
+    const closedPromise = firstValueFrom(ref.closed);
+
+    const cancelBtn = document.querySelector(
+      '.cancel-btn',
+    ) as HTMLButtonElement;
+    cancelBtn?.click();
+
+    await closedPromise;
+    expect(dialog.openDialogs.length).toBe(0);
+  });
+
+  it('DsDialogClose should pass result value when closing', async () => {
+    const ref = openAndTick({ message: 'hello' });
+
+    const closedPromise = firstValueFrom(ref.closed);
+
+    const okBtn = document.querySelector('.ok-btn') as HTMLButtonElement;
+    okBtn?.click();
+
+    const result = await closedPromise;
+    expect(result).toBe(true);
+  });
+
+  it('should apply DS defaults (hasBackdrop)', () => {
+    openAndTick({ message: 'hello' });
+
+    const backdrop = document.querySelector('.cdk-overlay-backdrop');
+    expect(backdrop).not.toBeNull();
+  });
+
+  it('should respect disableClose option', () => {
+    const ref = dialog.open(TestDialogComponent, {
+      data: { message: 'hello' },
+      disableClose: true,
+    });
+
+    const backdrop = document.querySelector(
+      '.cdk-overlay-backdrop',
+    ) as HTMLElement;
+    backdrop?.click();
+
+    expect(dialog.openDialogs.length).toBe(1);
+    ref.close();
   });
 
   it('should have no axe accessibility violations', async () => {
-    await openDialog();
-    await expectNoA11yViolations(fixture);
+    openAndTick({ message: 'accessible dialog' });
+
+    const container = document.querySelector(
+      'ds-dialog-container',
+    ) as HTMLElement;
+    expect(container).not.toBeNull();
+
+    const results = await axe.run(container, {
+      rules: {
+        // CDK overlay lives outside landmark regions by design
+        region: { enabled: false },
+      },
+    });
+
+    if (results.violations.length > 0) {
+      const formatted = results.violations
+        .map((v) => {
+          const nodes = v.nodes
+            .map((n) => `    - ${n.html}\n      ${n.failureSummary}`)
+            .join('\n');
+          return `[${v.impact}] ${v.id}: ${v.help}\n${nodes}`;
+        })
+        .join('\n\n');
+      throw new Error(
+        `Found ${results.violations.length} accessibility violation(s):\n\n${formatted}`,
+      );
+    }
   });
 });
