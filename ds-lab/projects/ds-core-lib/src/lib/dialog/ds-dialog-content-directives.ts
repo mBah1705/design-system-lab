@@ -6,7 +6,7 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import { CdkDialogContainer } from '@angular/cdk/dialog';
+import { DsDialogContainer } from './ds-dialog-container';
 import { DsDialogRef } from './ds-dialog-ref';
 
 let nextTitleId = 0;
@@ -20,7 +20,7 @@ let nextTitleId = 0;
 export class DsDialogTitle implements OnInit, OnDestroy {
   id = `ds-dialog-title-${nextTitleId++}`;
 
-  private _container = inject(CdkDialogContainer, { optional: true });
+  private _container = inject(DsDialogContainer, { optional: true });
   private _elementRef = inject(ElementRef);
 
   ngOnInit(): void {

@@ -45,7 +45,7 @@ export class DsDialog {
         dsRef = new DsDialogRef<R, C>(cdkDialogRef);
         return [
           { provide: DsDialogRef, useValue: dsRef },
-          { provide: CdkDialogContainer, useValue: container },
+          { provide: DsDialogContainer, useValue: container },
         ];
       },
     };
