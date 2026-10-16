@@ -1,4 +1,4 @@
-import axe, { type Result } from 'axe-core';
+import axe, { type Result, type RunOptions } from 'axe-core';
 import { type ComponentFixture } from '@angular/core/testing';
 
 function formatViolations(violations: Result[]): string {
@@ -12,10 +12,19 @@ function formatViolations(violations: Result[]): string {
     .join('\n\n');
 }
 
+/**
+ * Run axe-core on the given target and throw if any violations are found.
+ *
+ * @param target - A ComponentFixture (runs on fixture.nativeElement) or a raw HTMLElement.
+ * @param options - Optional axe RunOptions (e.g. to disable specific rules).
+ */
 export async function expectNoA11yViolations(
-  fixture: ComponentFixture<unknown>,
+  target: ComponentFixture<unknown> | HTMLElement,
+  options?: RunOptions,
 ): Promise<void> {
-  const results = await axe.run(fixture.nativeElement);
+  const element =
+    target instanceof HTMLElement ? target : target.nativeElement;
+  const results = await axe.run(element, options ?? {});
 
   if (results.violations.length > 0) {
     throw new Error(

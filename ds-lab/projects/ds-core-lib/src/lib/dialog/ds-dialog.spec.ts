@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import axe from 'axe-core';
+import { expectNoA11yViolations } from '../../test-utils/a11y';
 import { DsDialog } from './ds-dialog.service';
 import { DsDialogRef } from './ds-dialog-ref';
 import { DS_DIALOG_DATA } from './ds-dialog-tokens';
@@ -166,25 +166,11 @@ describe('DsDialog', () => {
     ) as HTMLElement;
     expect(container).not.toBeNull();
 
-    const results = await axe.run(container, {
+    await expectNoA11yViolations(container, {
       rules: {
         // CDK overlay lives outside landmark regions by design
         region: { enabled: false },
       },
     });
-
-    if (results.violations.length > 0) {
-      const formatted = results.violations
-        .map((v) => {
-          const nodes = v.nodes
-            .map((n) => `    - ${n.html}\n      ${n.failureSummary}`)
-            .join('\n');
-          return `[${v.impact}] ${v.id}: ${v.help}\n${nodes}`;
-        })
-        .join('\n\n');
-      throw new Error(
-        `Found ${results.violations.length} accessibility violation(s):\n\n${formatted}`,
-      );
-    }
   });
 });
