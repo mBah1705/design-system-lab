@@ -9,3 +9,4 @@ export {
   DsDialogClose,
 } from './ds-dialog-content-directives';
 export { DsDialog } from './ds-dialog.service';
+export { DsDialogComponent } from './ds-dialog.component';

@@ -1,5 +1,6 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { Observable } from 'rxjs';
+import { DsDialogContainer } from './ds-dialog-container';
 
 export class DsDialogRef<R = unknown, C = unknown> {
   /** @internal */
@@ -17,6 +18,11 @@ export class DsDialogRef<R = unknown, C = unknown> {
   /** The component instance inside the dialog. */
   get componentInstance(): C | null {
     return this._cdkRef.componentInstance;
+  }
+
+  /** The dialog container component instance. */
+  get containerInstance(): DsDialogContainer {
+    return this._cdkRef.containerInstance as DsDialogContainer;
   }
 
   /** Emits the result when the dialog is closed. */

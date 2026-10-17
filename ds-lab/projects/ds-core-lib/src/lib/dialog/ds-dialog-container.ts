@@ -10,4 +10,8 @@ import { Component } from '@angular/core';
     class: 'ds-dialog-container',
   },
 })
-export class DsDialogContainer extends CdkDialogContainer {}
+export class DsDialogContainer extends CdkDialogContainer {
+  get nativeElement(): HTMLElement {
+    return this._elementRef.nativeElement;
+  }
+}

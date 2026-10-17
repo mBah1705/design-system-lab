@@ -1,6 +1,6 @@
 import { ComponentType } from '@angular/cdk/portal';
 import { CdkDialogContainer, Dialog, DialogRef } from '@angular/cdk/dialog';
-import { inject, Injectable, type StaticProvider } from '@angular/core';
+import { inject, Injectable, TemplateRef, type StaticProvider } from '@angular/core';
 import { DsDialogConfig } from './ds-dialog-config';
 import { DsDialogContainer } from './ds-dialog-container';
 import { DsDialogRef } from './ds-dialog-ref';
@@ -23,6 +23,16 @@ export class DsDialog {
 
   open<R = unknown, D = unknown, C = unknown>(
     component: ComponentType<C>,
+    config?: DsDialogConfig<D>,
+  ): DsDialogRef<R, C>;
+
+  open<R = unknown, D = unknown, C = unknown>(
+    template: TemplateRef<C>,
+    config?: DsDialogConfig<D>,
+  ): DsDialogRef<R, C>;
+
+  open<R = unknown, D = unknown, C = unknown>(
+    componentOrTemplateRef: ComponentType<C> | TemplateRef<C>,
     config?: DsDialogConfig<D>,
   ): DsDialogRef<R, C> {
     const userConfig = config ?? {};
@@ -50,7 +60,7 @@ export class DsDialog {
       },
     };
 
-    this._cdkDialog.open(component, cdkConfig);
+    this._cdkDialog.open(componentOrTemplateRef, cdkConfig);
 
     this._dsDialogRefs.push(dsRef);
     dsRef.closed.subscribe(() => {

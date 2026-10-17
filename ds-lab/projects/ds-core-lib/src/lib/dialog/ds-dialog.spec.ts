@@ -3,6 +3,9 @@ import {
   Component,
   inject,
   provideZonelessChangeDetection,
+  TemplateRef,
+  ViewChild,
+  ViewContainerRef,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
@@ -32,6 +35,23 @@ import {
 })
 class TestDialogComponent {
   data = inject(DS_DIALOG_DATA) as { message: string };
+}
+
+@Component({
+  imports: [DsDialogTitle, DsDialogContent, DsDialogActions, DsDialogClose],
+  template: `
+    <ng-template #tplDialog>
+      <h2 dsDialogTitle>Template Title</h2>
+      <div dsDialogContent><p>Template content</p></div>
+      <div dsDialogActions>
+        <button [dsDialogClose]="'tpl-result'" class="tpl-ok-btn">OK</button>
+      </div>
+    </ng-template>
+  `,
+})
+class TemplateDialogHost {
+  @ViewChild('tplDialog') tplDialog!: TemplateRef<unknown>;
+  vcr = inject(ViewContainerRef);
 }
 
 describe('DsDialog', () => {
@@ -171,6 +191,55 @@ describe('DsDialog', () => {
         // CDK overlay lives outside landmark regions by design
         region: { enabled: false },
       },
+    });
+  });
+
+  describe('TemplateRef-based dialog', () => {
+    function createTemplateHost() {
+      const fixture = TestBed.createComponent(TemplateDialogHost);
+      fixture.detectChanges();
+      return fixture.componentInstance;
+    }
+
+    it('should open a dialog with a TemplateRef', () => {
+      const host = createTemplateHost();
+      const ref = dialog.open(host.tplDialog, {
+        viewContainerRef: host.vcr,
+      });
+      appRef.tick();
+      appRef.tick();
+
+      expect(ref).toBeInstanceOf(DsDialogRef);
+      const content = document.querySelector('ds-dialog-container');
+      expect(content?.textContent).toContain('Template content');
+    });
+
+    it('should return DsDialogRef with null componentInstance for TemplateRef', () => {
+      const host = createTemplateHost();
+      const ref = dialog.open(host.tplDialog, {
+        viewContainerRef: host.vcr,
+      });
+      appRef.tick();
+
+      expect(ref.componentInstance).toBeNull();
+    });
+
+    it('content directives should work inside TemplateRef-based dialog', async () => {
+      const host = createTemplateHost();
+      const ref = dialog.open(host.tplDialog, {
+        viewContainerRef: host.vcr,
+      });
+      appRef.tick();
+      appRef.tick();
+
+      const closedPromise = firstValueFrom(ref.closed);
+
+      const okBtn = document.querySelector('.tpl-ok-btn') as HTMLButtonElement;
+      expect(okBtn).not.toBeNull();
+      okBtn.click();
+
+      const result = await closedPromise;
+      expect(result).toBe('tpl-result');
     });
   });
 });
