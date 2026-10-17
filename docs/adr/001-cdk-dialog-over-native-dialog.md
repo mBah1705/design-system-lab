@@ -30,10 +30,12 @@ The implementation follows this architecture:
 
 - **`DsDialogContainer`** extends `CdkDialogContainer` to provide a DS-specific host element (`<ds-dialog-container>`) for styling.
 - **`DsDialog`** service wraps CDK's `Dialog`, applies DS defaults (`autoFocus: 'first-tabbable'`, `restoreFocus: true`, `hasBackdrop: true`, `role: 'dialog'`, `ariaModal: true`), and returns a `DsDialogRef` instead of CDK's `DialogRef`.
-- **`DsDialogRef`** is a thin wrapper around `DialogRef` that exposes only `close()`, `closed`, `componentInstance`, and `id` — keeping the public API surface minimal.
+- **`DsDialogRef`** is a thin wrapper around `DialogRef` that exposes `close()`, `closed`, `componentInstance`, `containerInstance`, and `id` — keeping the public API surface minimal while giving consumers access to the container when needed.
+- **`DsDialogContainer`** also exposes a `nativeElement` getter (surfacing the protected `_elementRef` from `CdkDialogContainer`) so that `DsDialogRef.containerInstance.nativeElement` provides direct DOM access without breaking encapsulation.
 - **Content directives** (`dsDialogTitle`, `dsDialogContent`, `dsDialogActions`, `dsDialogClose`) provide semantic structure and accessibility wiring without coupling consumers to CDK types.
 - **`DS_DIALOG_DATA`** re-exports CDK's `DIALOG_DATA` token so consumers never import from `@angular/cdk` directly.
-- The API is **service-based** (consumers call `dialog.open(MyComponent, { data })`) rather than component-based (`<ds-dialog [(open)]="...">`), aligning with Angular CDK and Angular Material patterns.
+- The **service-based API** (`dialog.open(Component, { data })`) supports both `ComponentType` and `TemplateRef` overloads, since CDK handles both natively.
+- A **declarative `<ds-dialog>` component** wraps the service for consumers who prefer a template-driven API (`<ds-dialog [(open)]="show">`). It uses `model()` for two-way binding, an `effect()` to react to signal changes, and provides itself as `DsDialogRef` (via `useExisting`) so that projected content directives like `dsDialogClose` can inject the ref without a proxy layer. After opening, it wires up `aria-labelledby` synchronously via `containerInstance.nativeElement`, since `DsDialogTitle`'s `ngOnInit` runs before CDK attaches projected content to the overlay.
 
 ## Consequences
 
@@ -48,7 +50,8 @@ The implementation follows this architecture:
 ### Trade-offs
 
 - **Peer dependency on `@angular/cdk`.** Consumers must install `@angular/cdk` alongside the design system library. This is acceptable since the project already targets Angular CDK as a foundation (see README).
-- **Service-based API is a breaking change.** Consumers using the previous `<ds-dialog>` component-based API must migrate to the service pattern. Since the library is pre-1.0 and the only consumer is the showcase app, this is low risk.
+- **Projected content DI requires `useExisting` provider.** In the declarative `<ds-dialog>` component, projected directives (e.g. `dsDialogClose`) live in the host's injector tree, not the CDK overlay's. The component provides itself as `DsDialogRef` via `useExisting` so projected directives can inject it and delegate `close()` calls. This is a standard Angular pattern but means the injected `DsDialogRef` in projected content is the component instance, not the real `DsDialogRef` created by the service.
+- **Manual `aria-labelledby` wiring in declarative mode.** `DsDialogTitle`'s `ngOnInit` fires before CDK moves projected content into the overlay, so the directive's DOM-based fallback (`el.closest('ds-dialog-container')`) fails. The `<ds-dialog>` component compensates by setting the attribute synchronously after `DsDialog.open()` returns, using `containerInstance.nativeElement`.
 
 ## Alternatives Considered
 
