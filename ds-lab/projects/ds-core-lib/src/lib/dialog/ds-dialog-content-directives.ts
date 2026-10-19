@@ -14,6 +14,7 @@ let nextTitleId = 0;
 @Directive({
   selector: '[dsDialogTitle]',
   host: {
+    class: 'ds-dialog-title',
     '[id]': 'id',
   },
 })

@@ -43,6 +43,7 @@ export class DsDialog {
       autoFocus: 'first-tabbable',
       restoreFocus: true,
       hasBackdrop: true,
+      backdropClass: 'ds-dialog-backdrop',
       role: 'dialog',
       ariaModal: true,
       ...userConfig,

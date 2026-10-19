@@ -1,0 +1,69 @@
+// ---------------------------------------------------------------------------
+// DS Dialog styles – modelled after PrimeNG 21 Aura theme
+// ---------------------------------------------------------------------------
+// Uses ViewEncapsulation.None so selectors are global.
+// Every selector is scoped to ds-dialog-* classes to avoid collisions.
+//
+// Override any variable on a parent element or :root to customise.
+// ---------------------------------------------------------------------------
+
+// -- Backdrop ---------------------------------------------------------------
+.cdk-overlay-backdrop.ds-dialog-backdrop {
+  background: var(--ds-dialog-mask-background, rgba(0, 0, 0, 0.4));
+}
+
+// -- Dialog panel -----------------------------------------------------------
+ds-dialog-container.ds-dialog-container {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  border-radius: var(--ds-dialog-border-radius, 12px);
+  box-shadow: var(
+    --ds-dialog-shadow,
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1)
+  );
+  background: var(--ds-dialog-background, #ffffff);
+  border: 1px solid var(--ds-dialog-border-color, #e2e8f0);
+  color: var(--ds-dialog-color, #334155);
+  outline: none;
+  will-change: transform;
+  animation: ds-dialog-enter 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+// -- Title / header ---------------------------------------------------------
+.ds-dialog-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: var(--ds-dialog-header-padding, 1.125rem);
+  font-weight: var(--ds-dialog-title-font-weight, 600);
+  font-size: var(--ds-dialog-title-font-size, 1.25rem);
+  line-height: 1.4;
+  margin: 0;
+}
+
+// -- Content ----------------------------------------------------------------
+.ds-dialog-content {
+  overflow-y: auto;
+  padding: var(--ds-dialog-content-padding, 0 1.125rem 1.125rem);
+  flex-grow: 1;
+}
+
+// -- Actions / footer -------------------------------------------------------
+.ds-dialog-actions {
+  flex-shrink: 0;
+  padding: var(--ds-dialog-footer-padding, 0 1.125rem 1.125rem);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ds-dialog-footer-gap, 0.5rem);
+}
+
+// -- Enter animation --------------------------------------------------------
+@keyframes ds-dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+}
