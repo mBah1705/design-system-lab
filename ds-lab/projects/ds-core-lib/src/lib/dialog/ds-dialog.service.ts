@@ -37,16 +37,22 @@ export class DsDialog {
   ): DsDialogRef<R, C> {
     const userConfig = config ?? {};
 
+    const userBackdropClass = userConfig.backdropClass
+      ? Array.isArray(userConfig.backdropClass)
+        ? userConfig.backdropClass
+        : [userConfig.backdropClass]
+      : [];
+
     let dsRef!: DsDialogRef<R, C>;
 
     const cdkConfig: any = {
       autoFocus: 'first-tabbable',
       restoreFocus: true,
       hasBackdrop: true,
-      backdropClass: 'ds-dialog-backdrop',
       role: 'dialog',
       ariaModal: true,
       ...userConfig,
+      backdropClass: ['ds-dialog-backdrop', ...userBackdropClass],
       container: DsDialogContainer,
       providers: (
         cdkDialogRef: DialogRef<R, C>,
