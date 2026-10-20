@@ -1,0 +1,83 @@
+<h1>Dialog</h1>
+<p class="page-description">
+  The dialog component supports both declarative (component-based) and
+  programmatic (service-based) usage.
+</p>
+
+<!-- Component-based (Declarative) -->
+<section class="demo-section">
+  <h2>Component-based (Declarative)</h2>
+
+  <div class="demo-card">
+    <h3>Basic Dialog</h3>
+    <p>Opens a simple dialog with a title, content, and close button.</p>
+    <button class="btn btn-primary" (click)="openBasicDialog()">
+      Open Basic Dialog
+    </button>
+    @if (basicResult()) {
+      <p class="result">Result: {{ basicResult() }}</p>
+    }
+  </div>
+
+  <ds-dialog [(open)]="basicOpen" (openChange)="onBasicClosed()">
+    <h2 dsDialogTitle>Basic Dialog</h2>
+    <div dsDialogContent>
+      <p>This is a basic dialog using the declarative API.</p>
+      <p>Click the button below or press Escape to close it.</p>
+    </div>
+    <div dsDialogActions>
+      <button class="btn btn-primary" dsDialogClose>Close</button>
+    </div>
+  </ds-dialog>
+
+  <div class="demo-card">
+    <h3>Customized Dialog</h3>
+    <p>
+      Uses <code>disableClose</code> so the backdrop and Escape key won't
+      close it. Must use the close button.
+    </p>
+    <button class="btn btn-primary" (click)="openCustomDialog()">
+      Open Customized Dialog
+    </button>
+    @if (customResult()) {
+      <p class="result">Result: {{ customResult() }}</p>
+    }
+  </div>
+
+  <ds-dialog
+    [(open)]="customOpen"
+    [config]="{ disableClose: true, width: '500px' }"
+    (openChange)="onCustomClosed()"
+  >
+    <h2 dsDialogTitle>Customized Dialog</h2>
+    <div dsDialogContent>
+      <p>This dialog has <strong>disableClose</strong> enabled.</p>
+      <p>
+        Clicking the backdrop or pressing Escape will <em>not</em> close it.
+        You must use the button below.
+      </p>
+    </div>
+    <div dsDialogActions>
+      <button class="btn btn-primary" dsDialogClose>Got it</button>
+    </div>
+  </ds-dialog>
+</section>
+
+<!-- Service-based (Programmatic) -->
+<section class="demo-section">
+  <h2>Service-based (Programmatic)</h2>
+
+  <div class="demo-card">
+    <h3>Confirm Dialog</h3>
+    <p>
+      Opens a confirmation dialog via <code>DsDialog.open()</code>. Returns a
+      result indicating whether the user confirmed or cancelled.
+    </p>
+    <button class="btn btn-primary" (click)="openConfirmDialog()">
+      Open Confirm Dialog
+    </button>
+    @if (serviceResult()) {
+      <p class="result">Result: {{ serviceResult() }}</p>
+    }
+  </div>
+</section>
